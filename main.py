@@ -40,8 +40,26 @@ def march_points(step, points, weights, s, t):
         
         points[i] = (point[0] + ascend * step * x, point[1] + ascend * step * y)
 
+def distance(a, b):
+    return math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)
+    
+def spread_points(points, step, s):
+    for i, pointa in enumerate(points):
+        for pointb in points:
+            if pointa != pointb:
+                dist = distance(pointa, pointb) ** 2
+                jump = math.exp(dist / (-2 * (s ** 2))) * step
+                vector = (pointa[0] - pointb[0], pointa[1] - pointb[1])
+                uvector = (vector[0] / dist, vector[1] / dist)
+                points[i] = (uvector[0] * jump + pointa[0], uvector[1] * jump + pointa[1])
+
+def Render_Text(what, color, where):
+    font = pygame.font.SysFont('Comic Sans MS', 15)
+    text = font.render(what, 1, pygame.Color(color))
+    window.blit(text, where)
 
 pygame.init()
+pygame.font.init()
 
 width, height = 500, 500
 
@@ -51,22 +69,29 @@ running = True
 
 points = []
 
-for i in np.arange(0.0, 360.0, 0.5):
+for i in np.arange(0.0, 360.0, 10):
     x = math.cos(math.radians(i)) * 80 + width  / 2 + random.randint(0, 20)
     y = math.sin(math.radians(i)) * 80 + height / 2 + random.randint(0, 20)
     points.append((x, y))
     
 point2 = (width / 2 + 50, height / 2)
 leap = 10
+clock = pygame.time.Clock()
 
 while running:
+    
+    clock.tick()
     
     window.fill((255, 255, 255))
     
     for point in points:
         pygame.draw.circle(window, (0, 0, 0), point, 2.5, 1)
-    
+        
+    spread_points(points, 30, 100)
     march_points(100, points, [(width / 2 - 50, height / 2), point2],  30, 0.1)
+    
+    Render_Text(str(int(clock.get_fps())), (255,0,0), (0,0))
+    #print("FPS:", int(clock.get_fps()))
     
     pygame.display.flip()
     for event in pygame.event.get():
